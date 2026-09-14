@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>InspireSpec — 把设计稿翻译成工程规格文档</title>
+  <meta name="description" content="Translate design assets into engineering specifications — making AI coding evidence-based.">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📐</text></svg>">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/docsify@4/themes/vue.css">
+  <style>
+    :root {
+      --theme-color: #2b7;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans SC", sans-serif;
+    }
+    .sidebar-nav > ul > li > a {
+      font-weight: 600;
+    }
+    .markdown-section {
+      max-width: 780px;
+    }
+    .markdown-section table {
+      display: table;
+      width: 100%;
+    }
+    .markdown-section pre > code {
+      font-family: "Cascadia Code", "Fira Code", Consolas, monospace;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">正在加载，请稍候...</div>
+
+  <script>
+    window.$docsify = {
+      name: 'InspireSpec',
+      repo: '',
+      loadSidebar: true,
+      subMaxLevel: 2,
+      search: {
+        paths: 'auto',
+        placeholder: '搜索文档...',
+        noData: '没有匹配结果',
+        maxAge: 86400000
+      },
+      formatUpdated: '{YYYY}-{MM}-{DD}',
+      auto2top: true,
+      homepage: 'README.md',
+      notFoundPage: true,
+      pagination: {
+        previousText: '上一篇',
+        nextText: '下一篇',
+      }
+    }
+  </script>
+
+  <!-- Docsify core -->
+  <script src="https://cdn.jsdelivr.net/npm/docsify@4/lib/docsify.min.js"></script>
+
+  <!-- Search -->
+  <script src="https://cdn.jsdelivr.net/npm/docsify@4/lib/plugins/search.min.js"></script>
+
+  <!-- Code highlighting -->
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1/components/prism-core.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1/plugins/autoloader/prism-autoloader.min.js"></script>
+
+  <!-- Pagination -->
+  <script src="https://cdn.jsdelivr.net/npm/docsify-pagination@2/dist/docsify-pagination.min.js"></script>
+</body>
+</html>
