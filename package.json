@@ -1,0 +1,17 @@
+{
+  "name": "inspire-spec",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "InspireSpec MCP 服务：把设计资产翻译成工程规格的方法论，编码为 AI 可调用的阶段引导",
+  "scripts": {
+    "start": "node mcp-server.js",
+    "web": "node serve-web.js",
+    "build": "node build-static.js",
+    "test": "node test-mcp.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "zod": "^4.6.2"
+  }
+}

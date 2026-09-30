@@ -1,0 +1,35 @@
+:root {
+  /* 色彩 */
+  --c-bg: #fafafa;
+  --c-surface: #fff;
+  --c-border: #e5e5e5;
+  --c-text: #1a1a1a;
+  --c-text-secondary: #666;
+  --c-primary: #2563eb;
+  --c-primary-light: #eff6ff;
+  --c-success: #16a34a;
+  --c-warning: #d97706;
+  --c-danger: #dc2626;
+  --c-code-bg: #f5f5f5;
+
+  /* 间距 */
+  --s-xs: 4px;
+  --s-sm: 8px;
+  --s-md: 16px;
+  --s-lg: 24px;
+  --s-xl: 32px;
+  --s-2xl: 48px;
+
+  /* 圆角 */
+  --r-sm: 4px;
+  --r-md: 8px;
+  --r-lg: 12px;
+
+  /* 字号 */
+  --f-xs: 12px;
+  --f-sm: 14px;
+  --f-md: 16px;
+  --f-lg: 20px;
+  --f-xl: 24px;
+  --f-2xl: 32px;
+}

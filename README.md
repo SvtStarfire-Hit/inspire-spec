@@ -86,7 +86,55 @@ InspireDesign 阶段 8（交接开发）完成后，你拥有了完整的 UI 设
 
 ## 4. 快速使用
 
-### 4.1 直接阅读文档
+### 4.1 路径 A —— 让 AI agent 引导你（推荐）
+
+这是本项目的主要用途。在支持 MCP 的 AI IDE 中注册本服务后，AI 就能按 7 阶段流程引导你完成工程规格：
+
+1. **安装依赖**—— 在本目录运行 `npm install`
+2. **注册 MCP 服务**—— 在你的 IDE 的 MCP 配置中添加本服务（stdio 传输）：
+   ```json
+   {
+     "mcpServers": {
+       "inspire-spec": {
+         "command": "node",
+         "args": ["<path-to-InspireSpec>/mcp-server.js"]
+       }
+     }
+   }
+   ```
+3. **对 AI 说话**—— "用 InspireSpec 引导我把这个设计稿翻译成工程规格"
+4. **按流程走**—— AI 按阶段引导：每阶段产出文档 → 质量门禁检查 → 等你确认 → 进下一阶段
+
+可用工具：
+
+| 工具 | 参数 | 说明 |
+|------|------|------|
+| `get_stage_checklist` | `stage` | 返回指定阶段的完整约束包 |
+| `list_scenes` | 无 | 列出所有可用场景 |
+| `get_scene_guidance` | `scene`, `stage` | 返回场景覆盖后的阶段约束包 |
+
+### 4.2 路径 B —— 页面端浏览，复制提示词去对话
+
+1. 启动页面端：`npm run web` → 自动打开 `http://localhost:4174/web/`（页面端自包含，可离线使用）
+2. 从「流程全景」进入你想开始的阶段，照着「AI 引导步骤」推进
+3. 复制「提示词模板」→ 粘贴到 AI IDE 中对话
+4. 右上角可切换场景（Web 前后端 / 软硬件协同），查看场景专属约束
+
+### 4.3 路径 C —— 部署成静态站点（可选）
+
+页面端是零构建的静态站点（纯 HTML/CSS/原生 ESM），可直接部署到任意静态服务器：
+
+1. 打包：`npm run build` → 产出 `dist/`（含 `web/`、`data/`、`docs/`、`templates/`、README）
+2. 上传 `dist/` 到服务器（nginx / OSS / GitHub Pages 等），把**服务器根目录指向 `dist`**
+3. 访问 `http://<域名>/web/`
+
+注意事项：
+
+- **必须保留目录层级**：`web/` 与 `data/` 必须同级——`web/assets/app.js` 以 `../../data/*.js` 引用同一份数据，不能只上传 `web/`
+- 路由是 hash 形式（`#stage/intake`），**无需** SPA 回退配置
+- 输出目录可用 `OUT_DIR` 覆盖：`OUT_DIR=public npm run build`（PowerShell：`$env:OUT_DIR="public"; npm run build`）
+
+### 4.4 直接阅读文档
 
 通读 [docs/](./docs/) 了解正式方法论文档集：
 
@@ -105,7 +153,7 @@ InspireDesign 阶段 8（交接开发）完成后，你拥有了完整的 UI 设
 | [10-数据契约.md](./docs/10-数据契约.md) | 阶段约束包的字段结构定义（为未来 MCP/Web 做准备） |
 | [99-定位分析.md](./docs/99-定位分析.md) | 从软件工程视角分析 InspireSpec 的学科定位（需求工程、软件规约、V 模型左侧等） |
 
-### 4.2 使用模板
+### 4.5 使用模板
 
 [templates/](./templates/) 目录提供即用型模板：
 
@@ -123,7 +171,7 @@ InspireDesign 阶段 8（交接开发）完成后，你拥有了完整的 UI 设
 | [硬件与部署清单模板.md](./templates/硬件与部署清单模板.md) | 记录运行环境、设备、网络、模型、现场验收 | F-G |
 | [变更日志模板.md](./templates/变更日志模板.md) | 记录每次修改的原因和影响 | E-G |
 
-### 4.3 查看实践案例
+### 4.6 查看实践案例
 
 [cases/](./cases/) 目录收录真实项目的应用记录：
 
@@ -166,8 +214,21 @@ InspireSpec/
 │  └─ 变更日志模板.md
 ├─ cases/                             # 真实项目应用案例
 │  └─ Animals项目实践.md
-├─ data/                              # （规划中）机器可读约束包
-└─ tools/                             # （规划中）自动化检查工具
+├─ data/                              # 机器可读约束包（单一事实来源）
+│  ├─ stages.js                        # 7 阶段约束包（StageContract）
+│  └─ scenes.js                        # 场景扩展（SceneExtension：web / hw）
+├─ web/                               # 页面端（零构建静态站点）
+│  ├─ index.html
+│  └─ assets/
+│     ├─ tokens.css                    # 设计令牌
+│     ├─ app.css                       # 样式
+│     └─ app.js                        # 交互脚本（hash 路由 / 渲染 / 复制）
+├─ mcp-server.js                      # MCP 服务（3 工具：get_stage_checklist / list_scenes / get_scene_guidance）
+├─ serve-web.js                       # 页面端本地静态服务器
+├─ build-static.js                    # 静态打包脚本（npm run build → dist/）
+├─ test-mcp.js                        # MCP 服务冒烟测试（30 项）
+├─ package.json                       # 依赖与脚本
+└─ .gitignore
 ```
 
 ---
@@ -211,7 +272,7 @@ InspireDesign 阶段 8 完成后，以下资产移交给 InspireSpec 阶段 A：
 | 核心工具 | `get_stage_guidance(mode, stage)` | `get_stage_checklist(stage)` + `get_scene_guidance(scene, stage)` |
 | 设计原则 | 粗粒度、无状态、任意跳转 | 粗粒度、无状态、任意跳转 |
 | 角色分工 | 工具声明 / AI 执行 / 人决策 | 同 |
-| 演进路线 | Web + MCP 已实现 | 数据契约已定义，Web + MCP 规划中 |
+| 演进路线 | Web + MCP 已实现 | Web + MCP 已实现 |
 
 ---
 
@@ -219,9 +280,11 @@ InspireDesign 阶段 8 完成后，以下资产移交给 InspireSpec 阶段 A：
 
 | 阶段 | 形态 | 状态 |
 |------|------|------|
-| 方法论 + 模板 + 提示词 | Markdown 文档集 | **当前** |
-| 数据外置化 | `data/stages.js` 机器可读约束包（结构见 [10-数据契约.md](./docs/10-数据契约.md)） | 规划中 |
-| MCP 服务 | `get_stage_checklist(stage)` 等工具（设计见 [10-数据契约.md](./docs/10-数据契约.md) §4） | 规划中 |
+| 方法论 + 模板 + 提示词 | Markdown 文档集 | ✅ 已完成 |
+| 数据外置化 | `data/stages.js` + `data/scenes.js` 机器可读约束包 | ✅ 已完成 |
+| MCP 服务 | `mcp-server.js`（3 工具：`get_stage_checklist` / `list_scenes` / `get_scene_guidance`） | ✅ 已完成 |
+| 页面端 | `web/` 零构建静态站点（hash 路由 / 场景切换 / 一键复制提示词） | ✅ 已完成 |
+| 静态打包 | `build-static.js` → `dist/` 可部署目录 | ✅ 已完成 |
 | 自动化检查 | 数据字典一致性检查、状态机完整性检查 | 规划中 |
 
 演进原则：**先固化、边用边改、不过度设计。** 先在真实项目中走完全流程，积累经验后再抽象为工具。

@@ -1,0 +1,192 @@
+/* InspireSpec 页面端 · 交互脚本
+ * 零框架、零构建；数据与 MCP 端同源（data/*.js，ESM 直接加载）。
+ * 职责：hash 路由 / 渲染视图 / 一键复制 / 场景选择。 */
+import { stages } from "../../data/stages.js";
+import { scenes } from "../../data/scenes.js";
+
+const view = document.getElementById("view");
+const sceneSelect = document.getElementById("scene");
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+/* 场景覆盖合并 */
+function contractOf(stage) {
+  const sceneId = sceneSelect.value;
+  if (!sceneId) return { ...stage };
+  const scene = scenes.find((s) => s.id === sceneId);
+  if (!scene) return { ...stage };
+  const override = scene.stageOverrides?.[stage.id] ?? {};
+  return { ...stage, ...override };
+}
+
+/* 初始化场景下拉 */
+scenes.forEach((s) => {
+  const opt = document.createElement("option");
+  opt.value = s.id;
+  opt.textContent = s.name;
+  sceneSelect.appendChild(opt);
+});
+sceneSelect.addEventListener("change", () => render());
+
+/* 一键复制 */
+async function copyText(text) {
+  try { await navigator.clipboard.writeText(text); return true; }
+  catch { /* 降级 */ }
+  const ta = document.createElement("textarea");
+  ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+  document.body.appendChild(ta); ta.select();
+  let ok = false;
+  try { ok = document.execCommand("copy"); } catch { /* 忽略 */ }
+  ta.remove();
+  return ok;
+}
+function flashCopied(btn) {
+  if (btn.dataset.original == null) btn.dataset.original = btn.innerHTML;
+  btn.classList.add("copied");
+  btn.innerHTML = "<span>✓ 已复制</span>";
+  clearTimeout(btn._t);
+  btn._t = setTimeout(() => { btn.classList.remove("copied"); btn.innerHTML = btn.dataset.original; }, 1400);
+}
+document.addEventListener("click", async (e) => {
+  const btn = e.target.closest("[data-copy], [data-copy-el]");
+  if (!btn) return;
+  let text = btn.dataset.copy ?? "";
+  if (btn.dataset.copyEl) text = document.querySelector(btn.dataset.copyEl)?.textContent ?? "";
+  if (await copyText(text)) flashCopied(btn);
+});
+
+/* 渲染片段 */
+function codeblock(label, text) {
+  const id = `cb-${Math.random().toString(36).slice(2, 8)}`;
+  return `<div class="codeblock">
+    <div class="codeblock-head">
+      <span class="codeblock-label">${esc(label)}</span>
+      <button class="btn-copy" type="button" data-copy-el="#${id}"><span>复制</span></button>
+    </div>
+    <pre><code id="${id}">${esc(text)}</code></pre>
+  </div>`;
+}
+
+function tagList(items, cls = "") {
+  return `<div class="tag-list">${items.map((t) => `<span class="tag ${cls}">${esc(t)}</span>`).join("")}</div>`;
+}
+
+/* 总览视图 */
+function renderOverview() {
+  const letters = ["A", "B", "C", "D", "E", "F", "G"];
+  const cards = stages.map((s, i) => `
+    <div class="stage-card" onclick="location.hash='#stage/${s.id}'">
+      <div><span class="stage-num">${letters[i]}</span><span class="stage-name">${esc(s.name)}</span></div>
+      <div class="stage-goal">${esc(s.goal)}</div>
+    </div>
+  `).join("");
+
+  view.innerHTML = `
+    <h2 style="font-size:var(--f-xl);margin-bottom:var(--s-xs)">流程全景</h2>
+    <p style="color:var(--c-text-secondary)">7 个阶段，每个阶段都有完整的约束包：目标、产物、出口条件、规则、引导步骤、提示词模板、常见坑、回退影响面、门禁清单。</p>
+    <div class="stage-grid">${cards}</div>
+    <div class="section" style="margin-top:var(--s-2xl)">
+      <div class="section-title">场景扩展</div>
+      <p style="font-size:var(--f-sm);color:var(--c-text-secondary);margin-top:var(--s-sm)">
+        不同项目类型可在通用阶段基础上叠加专属约束。在右上角选择场景后，点击查看各阶段的差异。
+      </p>
+      <div style="margin-top:var(--s-md)">
+        ${scenes.map((s) => `<span class="tag" style="font-size:var(--f-sm);padding:4px 12px">${esc(s.name)} — ${esc(s.description)}</span>`).join(" ")}
+      </div>
+    </div>
+  `;
+}
+
+/* 详情视图 */
+function renderDetail(stageId) {
+  const stage = stages.find((s) => s.id === stageId);
+  if (!stage) { renderOverview(); return; }
+  const c = contractOf(stage);
+  const sceneId = sceneSelect.value;
+  const scene = sceneId ? scenes.find((s) => s.id === sceneId) : null;
+  const hasOverride = scene?.stageOverrides?.[stageId] != null;
+
+  const letters = ["A", "B", "C", "D", "E", "F", "G"];
+  const letter = letters[stage.number] ?? "";
+
+  view.innerHTML = `
+    <a class="back-link" href="#">← 返回流程全景</a>
+    <div class="detail">
+      <h2><span class="stage-num" style="font-size:var(--f-md)">${letter}</span> ${esc(c.name)}</h2>
+      <p class="goal">${esc(c.goal)}</p>
+      ${hasOverride ? `<p style="font-size:var(--f-xs);color:var(--c-primary);background:var(--c-primary-light);padding:4px 8px;border-radius:var(--r-sm);display:inline-block">已应用「${esc(scene.name)}」场景覆盖</p>` : ""}
+
+      <div class="section">
+        <div class="section-title">产物</div>
+        <ul class="field-list">
+          ${c.deliverables.map((d) => `<li><span class="field-name">${esc(d.name)}</span><span class="field-desc">${esc(d.description)}</span></li>`).join("")}
+        </ul>
+      </div>
+
+      <div class="section">
+        <div class="section-title">出口条件</div>
+        <ul class="field-list">
+          ${c.exitCriteria.map((e) => `<li>${esc(e)}</li>`).join("")}
+        </ul>
+      </div>
+
+      <div class="section">
+        <div class="section-title">规则</div>
+        ${tagList(c.rules, "rule")}
+      </div>
+
+      <div class="section">
+        <div class="section-title">AI 引导步骤</div>
+        <ol style="font-size:var(--f-sm);padding-left:var(--s-lg)">
+          ${c.guidance.map((g) => `<li style="margin-bottom:var(--s-xs)">${esc(g)}</li>`).join("")}
+        </ol>
+      </div>
+
+      <div class="section">
+        <div class="section-title">提示词模板</div>
+        ${codeblock("可复制提示词", c.aiPromptTemplate)}
+      </div>
+
+      <div class="section">
+        <div class="section-title">常见坑</div>
+        ${tagList(c.pitfalls, "pitfall")}
+      </div>
+
+      <div class="section">
+        <div class="section-title">回退影响面</div>
+        <ul class="field-list">
+          ${c.revisionImpact.map((r) => `<li>${esc(r)}</li>`).join("")}
+        </ul>
+      </div>
+
+      <div class="section">
+        <div class="section-title">门禁清单</div>
+        ${tagList(c.checklist, "check")}
+      </div>
+
+      <div class="section">
+        <div class="section-title">人确认点</div>
+        <p style="font-size:var(--f-sm)">${esc(c.humanCheckpoint)}</p>
+      </div>
+
+      <div class="section">
+        <div class="section-title">前置依赖</div>
+        <div class="dep-list">
+          ${c.dependencies.map((d) => `<div class="dep-item"><strong>${esc(d.deliverable)}</strong> ${d.hint ? `<span class="dep-hint">— ${esc(d.hint)}</span>` : ""}</div>`).join("")}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+/* 路由 */
+function render() {
+  const hash = location.hash.replace("#", "");
+  if (hash.startsWith("stage/")) {
+    renderDetail(hash.replace("stage/", ""));
+  } else {
+    renderOverview();
+  }
+  window.scrollTo(0, 0);
+}
+window.addEventListener("hashchange", render);
+render();
