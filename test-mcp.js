@@ -39,6 +39,7 @@ const parse = (r) => JSON.parse(r.content[0].text);
 // 1. 工具注册
 const tools = await client.listTools();
 check("tools/list 含 get_stage_checklist", tools.tools.some((t) => t.name === "get_stage_checklist"));
+check("tools/list 含 get_acceptance_spec", tools.tools.some((t) => t.name === "get_acceptance_spec"));
 check("tools/list 含 list_scenes", tools.tools.some((t) => t.name === "list_scenes"));
 check("tools/list 含 get_scene_guidance", tools.tools.some((t) => t.name === "get_scene_guidance"));
 
@@ -99,6 +100,19 @@ check("web implement 无覆盖，返回通用内容", wi.sceneId === "web" && ty
 // 10. 未知 scene
 const us = parse(await client.callTool({ name: "get_scene_guidance", arguments: { scene: "nope", stage: "intake" } }));
 check("未知 scene 返回 error", typeof us.error === "string");
+
+// 11. get_acceptance_spec
+const as1 = parse(await client.callTool({ name: "get_acceptance_spec", arguments: { stage: "contract" } }));
+check("acceptance_spec contract 有 boundaryConstraints", Array.isArray(as1.boundaryConstraints) && as1.boundaryConstraints.length >= 2);
+check("acceptance_spec contract 有 acceptanceCriteria", Array.isArray(as1.acceptanceCriteria) && as1.acceptanceCriteria.length >= 2);
+check("acceptance_spec contract 有 interfaceSignatures", Array.isArray(as1.interfaceSignatures));
+check("acceptance_spec contract 无 sceneId", as1.sceneId === undefined);
+
+const as2 = parse(await client.callTool({ name: "get_acceptance_spec", arguments: { stage: "contract", scene: "web" } }));
+check("acceptance_spec web contract 有 sceneId", as2.sceneId === "web");
+
+const as3 = parse(await client.callTool({ name: "get_acceptance_spec", arguments: { stage: "nope" } }));
+check("acceptance_spec 未知 stage 返回 error", typeof as3.error === "string");
 
 console.log(`\n结果：通过 ${pass}，失败 ${fail}`);
 await client.close();

@@ -2,8 +2,9 @@
 /**
  * InspireSpec MCP 服务（原型阶段）
  *
- * 提供三个工具：
- *   - get_stage_checklist   获取阶段约束包 / 7 阶段总览（核心工具）
+ * 提供四个工具：
+ *   - get_stage_checklist   获取阶段约束包（双轨制完整） / 7 阶段总览
+ *   - get_acceptance_spec   获取 B 系列验收规格（边界约束+验收用例+接口签名）
  *   - list_scenes           列出场景扩展
  *   - get_scene_guidance    获取场景覆盖后的阶段约束包
  *
@@ -37,6 +38,22 @@ function buildSceneStageContract(scene, stage, notice) {
   const contract = { sceneId: scene.id, ...merged };
   if (notice) contract.notice = notice;
   return contract;
+}
+
+/** 组装 B 系列验收规格（边界约束+验收用例+接口签名） */
+function buildAcceptanceSpec(stage, scene, notice) {
+  const source = scene ? { ...stage, ...(scene.stageOverrides?.[stage.id] ?? {}) } : { ...stage };
+  const spec = {
+    stageId: stage.id,
+    stageName: stage.name,
+    bDeliverables: source.bDeliverables ?? [],
+    boundaryConstraints: source.boundaryConstraints ?? [],
+    acceptanceCriteria: source.acceptanceCriteria ?? [],
+    interfaceSignatures: source.interfaceSignatures ?? [],
+  };
+  if (scene) spec.sceneId = scene.id;
+  if (notice) spec.notice = notice;
+  return spec;
 }
 
 /** 7 阶段总览 */
@@ -99,6 +116,45 @@ server.registerTool(
       });
     }
     return textResult(buildStageContract(s));
+  }
+);
+
+server.registerTool(
+  "get_acceptance_spec",
+  {
+    title: "获取 B 系列验收规格",
+    description:
+      "获取某阶段的 B 系列验收规格（边界约束+验收用例+接口签名），AI 编码的核心依据。" +
+      "返回精简的约束壳，不包含 A 系列流程引导内容。",
+    inputSchema: {
+      stage: z
+        .string()
+        .describe("阶段 id（intake / data / contract / arch / implement / verify / release）"),
+      scene: z
+        .string()
+        .optional()
+        .describe("场景 id（web / hw），可选"),
+    },
+  },
+  async ({ stage, scene }) => {
+    const s = stageMap.get(stage);
+    if (!s) {
+      return textResult({
+        error: `未知阶段 "${stage}"`,
+        validStages: stages.map((x) => ({ number: x.number, id: x.id, name: x.name })),
+      });
+    }
+    let sc = null;
+    if (scene) {
+      sc = sceneMap.get(scene);
+      if (!sc) {
+        return textResult({
+          error: `未知场景 "${scene}"`,
+          validScenes: scenes.map((x) => ({ id: x.id, name: x.name })),
+        });
+      }
+    }
+    return textResult(buildAcceptanceSpec(s, sc));
   }
 );
 
