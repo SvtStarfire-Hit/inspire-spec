@@ -51,19 +51,23 @@ check("总览含场景列表", Array.isArray(ov.scenes) && ov.scenes.length === 
 // 3. 单阶段：intake
 const intake = parse(await client.callTool({ name: "get_stage_checklist", arguments: { stage: "intake" } }));
 check("intake 有 goal", typeof intake.goal === "string" && intake.goal.length > 0);
-check("intake 有 deliverables", Array.isArray(intake.deliverables) && intake.deliverables.length >= 3);
+check("intake 有 aDeliverables", Array.isArray(intake.aDeliverables) && intake.aDeliverables.length >= 3);
+check("intake 有 bDeliverables", Array.isArray(intake.bDeliverables) && intake.bDeliverables.length >= 1);
+check("intake 有 boundaryConstraints", Array.isArray(intake.boundaryConstraints) && intake.boundaryConstraints.length >= 2);
+check("intake 有 acceptanceCriteria", Array.isArray(intake.acceptanceCriteria) && intake.acceptanceCriteria.length >= 2);
+check("intake 无 aiPromptTemplate", intake.aiPromptTemplate === undefined);
 check("intake 有 exitCriteria", Array.isArray(intake.exitCriteria) && intake.exitCriteria.length >= 3);
 check("intake 有 rules", Array.isArray(intake.rules) && intake.rules.length >= 3);
-check("intake 有 guidance", Array.isArray(intake.guidance) && intake.guidance.length >= 3);
+check("intake 有 aGuidance", Array.isArray(intake.aGuidance) && intake.aGuidance.length >= 3);
 check("intake 有 pitfalls", Array.isArray(intake.pitfalls) && intake.pitfalls.length >= 3);
 check("intake 有 checklist", Array.isArray(intake.checklist) && intake.checklist.length >= 3);
 check("intake 有 humanCheckpoint", typeof intake.humanCheckpoint === "string");
-check("intake 有 aiPromptTemplate", typeof intake.aiPromptTemplate === "string");
+
 check("intake 有 revisionImpact", Array.isArray(intake.revisionImpact));
 
 // 4. 单阶段：release（收尾阶段完整性）
 const rel = parse(await client.callTool({ name: "get_stage_checklist", arguments: { stage: "release" } }));
-check("release 字段齐全", Boolean(rel.goal && rel.exitCriteria && rel.guidance && rel.humanCheckpoint && rel.revisionImpact));
+check("release 字段齐全", Boolean(rel.goal && rel.exitCriteria && rel.aGuidance && rel.humanCheckpoint && rel.revisionImpact && rel.boundaryConstraints && rel.acceptanceCriteria));
 
 // 5. 未知 stage
 const un = parse(await client.callTool({ name: "get_stage_checklist", arguments: { stage: "nope" } }));
@@ -79,14 +83,14 @@ check("hw 场景状态为 available", sc.scenes.find((s) => s.id === "hw")?.stat
 // 7. get_scene_guidance：web 场景覆盖 contract 阶段
 const wc = parse(await client.callTool({ name: "get_scene_guidance", arguments: { scene: "web", stage: "contract" } }));
 check("web contract 带 sceneId", wc.sceneId === "web");
-check("web contract 覆盖含 API 契约", wc.deliverables?.some((d) => d.name?.includes("API")));
-check("web contract 覆盖含数据库 Schema", wc.deliverables?.some((d) => d.name?.includes("Schema")));
+check("web contract 覆盖含 API 契约", wc.aDeliverables?.some((d) => d.name?.includes("API")));
+check("web contract 覆盖含数据库 Schema", wc.aDeliverables?.some((d) => d.name?.includes("Schema")));
 
 // 8. get_scene_guidance：hw 场景覆盖 contract 阶段
 const hc = parse(await client.callTool({ name: "get_scene_guidance", arguments: { scene: "hw", stage: "contract" } }));
 check("hw contract 带 sceneId", hc.sceneId === "hw");
-check("hw contract 覆盖含设备通信契约", hc.deliverables?.some((d) => d.name?.includes("设备通信")));
-check("hw contract 覆盖含设备状态机", hc.deliverables?.some((d) => d.name?.includes("设备状态机")));
+check("hw contract 覆盖含设备通信契约", hc.aDeliverables?.some((d) => d.name?.includes("设备通信")));
+check("hw contract 覆盖含设备状态机", hc.aDeliverables?.some((d) => d.name?.includes("设备状态机")));
 
 // 9. get_scene_guidance：无覆盖的阶段返回通用内容
 const wi = parse(await client.callTool({ name: "get_scene_guidance", arguments: { scene: "web", stage: "implement" } }));

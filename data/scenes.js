@@ -13,7 +13,7 @@ export const scenes = [
     status: "available",
     stageOverrides: {
       contract: {
-        deliverables: [
+        aDeliverables: [
           { name: "API 契约", description: "RESTful/GraphQL 接口定义（方法/路径/请求体/响应体/错误码）" },
           { name: "数据库 Schema", description: "表结构、索引、迁移脚本" },
           { name: "核心流程时序图", description: "前后端调用时序（含异常路径）" },
@@ -32,7 +32,7 @@ export const scenes = [
         ],
       },
       arch: {
-        deliverables: [
+        aDeliverables: [
           { name: "架构 4+1 视图", description: "用例/逻辑/开发/进程/物理（含前后端分层）" },
           { name: "需求追踪矩阵 RTM", description: "需求→设计→API→代码→测试" },
           { name: "任务清单", description: "含依赖关系，前后端可并行的任务标注清楚" },
@@ -52,7 +52,7 @@ export const scenes = [
     status: "available",
     stageOverrides: {
       intake: {
-        deliverables: [
+        aDeliverables: [
           { name: "设计资产清单", description: "清点功能蓝图、界面稿、设计令牌等" },
           { name: "PRD 产品需求文档", description: "范围/角色/功能/验收标准/非功能需求" },
           { name: "差距报告", description: "工程维度差距与处置建议" },
@@ -66,7 +66,7 @@ export const scenes = [
         ],
       },
       data: {
-        deliverables: [
+        aDeliverables: [
           { name: "数据字典", description: "实体/字段/类型/约束/默认值/语义" },
           { name: "设备数据字典", description: "上报字段、单位、范围、采样周期、精度" },
           { name: "ER 图", description: "Mermaid erDiagram" },
@@ -80,7 +80,7 @@ export const scenes = [
         ],
       },
       contract: {
-        deliverables: [
+        aDeliverables: [
           { name: "接口/API/设备契约", description: "输入/输出/副作用/异常/权限/幂等性" },
           { name: "设备通信契约", description: "协议/端口/认证/心跳/超时/重试/幂等/缓存" },
           { name: "设备状态机", description: "在线/离线/故障/恢复/升级/维护" },
@@ -101,7 +101,7 @@ export const scenes = [
         ],
       },
       verify: {
-        deliverables: [
+        aDeliverables: [
           { name: "测试报告", description: "按 RTM 逐项对照结果" },
           { name: "缺陷清单", description: "含严重度分级和根因分类" },
           { name: "现场验收清单", description: "设备连通、压力、恢复、回滚" },

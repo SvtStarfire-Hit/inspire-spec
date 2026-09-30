@@ -48,8 +48,8 @@ function buildOverview(notice) {
     suggestedEntry: "intake",
     scenes: scenes.map((s) => ({ id: s.id, name: s.name, status: s.status })),
     howToUse: [
-      "开场先取总览建立全景，然后逐阶段获取约束包并按 guidance 引导",
-      "每个阶段：先按 guidance 引导，产出后停下来等用户确认（humanCheckpoint）",
+      "开场先取总览建立全景，然后逐阶段获取约束包并按 aGuidance 引导",
+      "每个阶段：先按 aGuidance 引导，产出后停下来等用户确认（humanCheckpoint）",
       "推进与新阶段的触发词来自用户（\"行 / 下一步 / 可以了\"）——本工具不判断满意度",
       "用户提出改动时：按 revisionImpact 判断回退范围",
       "如有场景需求，用 list_scenes 查看可用场景，用 get_scene_guidance 获取场景覆盖后的约束",
@@ -67,7 +67,7 @@ const server = new McpServer({
   name: "inspire-spec",
   version: "0.1.0",
   instructions:
-    "把\"设计资产→工程规格\"的方法论按 7 阶段流程引导用户。使用方式：先用 get_stage_checklist 取 7 阶段总览建立全景，再逐阶段获取约束包并按 guidance 引导。每个阶段结束必须停下来等用户确认（humanCheckpoint）；用户想改上游内容时，按 revisionImpact 判断回退范围。如有场景需求（Web/软硬件），用 list_scenes 和 get_scene_guidance。本服务无状态、不判断进展。",
+    "把\"设计资产→工程规格\"的方法论按 7 阶段流程引导用户（双轨制：A 系列给人看，B 系列给 AI 用）。使用方式：先用 get_stage_checklist 取 7 阶段总览建立全景，再逐阶段获取约束包并按 aGuidance 引导。每个阶段结束必须停下来等用户确认（humanCheckpoint）；用户想改上游内容时，按 revisionImpact 判断回退范围。B 系列的 boundaryConstraints 和 acceptanceCriteria 是 AI 编码的核心依据。如有场景需求（Web/软硬件），用 list_scenes 和 get_scene_guidance。本服务无状态、不判断进展。",
 });
 
 server.registerTool(
@@ -75,7 +75,7 @@ server.registerTool(
   {
     title: "获取阶段约束包（核心工具）",
     description:
-      "获取某个阶段的完整约束包：目标、产物、出口条件、前置依赖、硬规则、引导步骤、提示词模板、常见坑、回退影响面、人确认点、门禁清单。" +
+      "获取某个阶段的完整约束包（双轨制）：目标、A 系列产物、B 系列产物、出口条件、前置依赖、硬规则、A 系列引导步骤、边界约束、验收用例、常见坑、回退影响面、人确认点、门禁清单。" +
       "不传 stage 时返回 7 阶段总览。任何阶段可随时获取，支持回退修正；工具无状态、不做流程门禁。",
     inputSchema: {
       stage: z

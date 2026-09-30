@@ -164,6 +164,43 @@ pre { padding: var(--s-md); overflow-x: auto; font-size: var(--f-sm); white-spac
   font-size: var(--f-sm);
 }
 
+/* Tab 切换 */
+.tab-bar {
+  display: flex;
+  gap: var(--s-xs);
+  margin: var(--s-lg) 0 var(--s-md);
+  border-bottom: 2px solid var(--c-border);
+}
+.tab-btn {
+  padding: var(--s-sm) var(--s-md);
+  font-size: var(--f-sm);
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: var(--c-text-secondary);
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: all 0.15s;
+}
+.tab-btn:hover { color: var(--c-text); }
+.tab-btn.active {
+  color: var(--c-primary);
+  border-bottom-color: var(--c-primary);
+  font-weight: 600;
+}
+
+/* 验收用例 */
+.acceptance-list { display: flex; flex-direction: column; gap: var(--s-sm); }
+.acceptance-item {
+  background: var(--c-code-bg);
+  padding: var(--s-sm) var(--s-md);
+  border-radius: var(--r-sm);
+  font-size: var(--f-sm);
+  border-left: 3px solid var(--c-success);
+}
+.acceptance-item strong { display: block; margin-bottom: var(--s-xs); }
+.acceptance-detail { color: var(--c-text-secondary); font-family: monospace; font-size: var(--f-xs); }
+
 /* 响应式 */
 @media (max-width: 640px) {
   .header { flex-wrap: wrap; }

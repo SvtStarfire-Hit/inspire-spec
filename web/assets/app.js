@@ -82,7 +82,7 @@ function renderOverview() {
 
   view.innerHTML = `
     <h2 style="font-size:var(--f-xl);margin-bottom:var(--s-xs)">流程全景</h2>
-    <p style="color:var(--c-text-secondary)">7 个阶段，每个阶段都有完整的约束包：目标、产物、出口条件、规则、引导步骤、提示词模板、常见坑、回退影响面、门禁清单。</p>
+    <p style="color:var(--c-text-secondary)">7 个阶段，每个阶段产出双轨文档：A 系列（人读工程文档）+ B 系列（AI 用约束壳：边界约束 / 验收用例 / 接口签名）。</p>
     <div class="stage-grid">${cards}</div>
     <div class="section" style="margin-top:var(--s-2xl)">
       <div class="section-title">场景扩展</div>
@@ -97,6 +97,8 @@ function renderOverview() {
 }
 
 /* 详情视图 */
+let currentTab = "a"; // "a" | "b"
+
 function renderDetail(stageId) {
   const stage = stages.find((s) => s.id === stageId);
   if (!stage) { renderOverview(); return; }
@@ -108,6 +110,8 @@ function renderDetail(stageId) {
   const letters = ["A", "B", "C", "D", "E", "F", "G"];
   const letter = letters[stage.number] ?? "";
 
+  const tabBtn = (id, label) => `<button class="tab-btn ${currentTab === id ? "active" : ""}" data-tab="${id}">${label}</button>`;
+
   view.innerHTML = `
     <a class="back-link" href="#">← 返回流程全景</a>
     <div class="detail">
@@ -115,67 +119,103 @@ function renderDetail(stageId) {
       <p class="goal">${esc(c.goal)}</p>
       ${hasOverride ? `<p style="font-size:var(--f-xs);color:var(--c-primary);background:var(--c-primary-light);padding:4px 8px;border-radius:var(--r-sm);display:inline-block">已应用「${esc(scene.name)}」场景覆盖</p>` : ""}
 
-      <div class="section">
-        <div class="section-title">产物</div>
-        <ul class="field-list">
-          ${c.deliverables.map((d) => `<li><span class="field-name">${esc(d.name)}</span><span class="field-desc">${esc(d.description)}</span></li>`).join("")}
-        </ul>
+      <div class="tab-bar">
+        ${tabBtn("a", "A 系列 · 人读")}
+        ${tabBtn("b", "B 系列 · AI 用")}
+        ${tabBtn("common", "通用")}
       </div>
 
-      <div class="section">
-        <div class="section-title">出口条件</div>
-        <ul class="field-list">
-          ${c.exitCriteria.map((e) => `<li>${esc(e)}</li>`).join("")}
-        </ul>
+      <div id="tab-a" class="tab-panel" style="display:${currentTab === "a" ? "block" : "none"}">
+        <div class="section">
+          <div class="section-title">A 系列产物（工程文档）</div>
+          <ul class="field-list">
+            ${(c.aDeliverables || []).map((d) => `<li><span class="field-name">${esc(d.name)}</span><span class="field-desc">${esc(d.description)}</span></li>`).join("")}
+          </ul>
+        </div>
+        <div class="section">
+          <div class="section-title">流程建议</div>
+          <ol style="font-size:var(--f-sm);padding-left:var(--s-lg)">
+            ${(c.aGuidance || []).map((g) => `<li style="margin-bottom:var(--s-xs)">${esc(g)}</li>`).join("")}
+          </ol>
+        </div>
       </div>
 
-      <div class="section">
-        <div class="section-title">规则</div>
-        ${tagList(c.rules, "rule")}
+      <div id="tab-b" class="tab-panel" style="display:${currentTab === "b" ? "block" : "none"}">
+        <div class="section">
+          <div class="section-title">B 系列产物（约束壳）</div>
+          <ul class="field-list">
+            ${(c.bDeliverables || []).map((d) => `<li><span class="field-name">${esc(d.name)}</span><span class="field-desc">${esc(d.description)}</span></li>`).join("")}
+          </ul>
+        </div>
+        <div class="section">
+          <div class="section-title">边界约束</div>
+          ${tagList(c.boundaryConstraints || [], "rule")}
+        </div>
+        <div class="section">
+          <div class="section-title">验收用例</div>
+          <div class="acceptance-list">
+            ${(c.acceptanceCriteria || []).map((a) => `
+              <div class="acceptance-item">
+                <strong>${esc(a.scenario)}</strong>
+                <div class="acceptance-detail">Given ${esc(a.given)} → When ${esc(a.when)} → Then ${esc(a.then)}</div>
+              </div>
+            `).join("")}
+          </div>
+        </div>
+        ${c.interfaceSignatures?.length ? `<div class="section">
+          <div class="section-title">接口签名</div>
+          ${codeblock("接口规格", JSON.stringify(c.interfaceSignatures, null, 2))}
+        </div>` : ""}
       </div>
 
-      <div class="section">
-        <div class="section-title">AI 引导步骤</div>
-        <ol style="font-size:var(--f-sm);padding-left:var(--s-lg)">
-          ${c.guidance.map((g) => `<li style="margin-bottom:var(--s-xs)">${esc(g)}</li>`).join("")}
-        </ol>
-      </div>
-
-      <div class="section">
-        <div class="section-title">提示词模板</div>
-        ${codeblock("可复制提示词", c.aiPromptTemplate)}
-      </div>
-
-      <div class="section">
-        <div class="section-title">常见坑</div>
-        ${tagList(c.pitfalls, "pitfall")}
-      </div>
-
-      <div class="section">
-        <div class="section-title">回退影响面</div>
-        <ul class="field-list">
-          ${c.revisionImpact.map((r) => `<li>${esc(r)}</li>`).join("")}
-        </ul>
-      </div>
-
-      <div class="section">
-        <div class="section-title">门禁清单</div>
-        ${tagList(c.checklist, "check")}
-      </div>
-
-      <div class="section">
-        <div class="section-title">人确认点</div>
-        <p style="font-size:var(--f-sm)">${esc(c.humanCheckpoint)}</p>
-      </div>
-
-      <div class="section">
-        <div class="section-title">前置依赖</div>
-        <div class="dep-list">
-          ${c.dependencies.map((d) => `<div class="dep-item"><strong>${esc(d.deliverable)}</strong> ${d.hint ? `<span class="dep-hint">— ${esc(d.hint)}</span>` : ""}</div>`).join("")}
+      <div id="tab-common" class="tab-panel" style="display:${currentTab === "common" ? "block" : "none"}">
+        <div class="section">
+          <div class="section-title">出口条件</div>
+          <ul class="field-list">
+            ${c.exitCriteria.map((e) => `<li>${esc(e)}</li>`).join("")}
+          </ul>
+        </div>
+        <div class="section">
+          <div class="section-title">规则</div>
+          ${tagList(c.rules, "rule")}
+        </div>
+        <div class="section">
+          <div class="section-title">常见坑</div>
+          ${tagList(c.pitfalls, "pitfall")}
+        </div>
+        <div class="section">
+          <div class="section-title">回退影响面</div>
+          <ul class="field-list">
+            ${c.revisionImpact.map((r) => `<li>${esc(r)}</li>`).join("")}
+          </ul>
+        </div>
+        <div class="section">
+          <div class="section-title">门禁清单</div>
+          ${tagList(c.checklist, "check")}
+        </div>
+        <div class="section">
+          <div class="section-title">人确认点</div>
+          <p style="font-size:var(--f-sm)">${esc(c.humanCheckpoint)}</p>
+        </div>
+        <div class="section">
+          <div class="section-title">前置依赖</div>
+          <div class="dep-list">
+            ${c.dependencies.map((d) => `<div class="dep-item"><strong>${esc(d.deliverable)}</strong> ${d.hint ? `<span class="dep-hint">— ${esc(d.hint)}</span>` : ""}</div>`).join("")}
+          </div>
         </div>
       </div>
     </div>
   `;
+
+  // tab 切换
+  view.querySelectorAll(".tab-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      currentTab = btn.dataset.tab;
+      view.querySelectorAll(".tab-btn").forEach((b) => b.classList.toggle("active", b.dataset.tab === currentTab));
+      view.querySelectorAll(".tab-panel").forEach((p) => p.style.display = "none");
+      document.getElementById(`tab-${currentTab}`).style.display = "block";
+    });
+  });
 }
 
 /* 路由 */
